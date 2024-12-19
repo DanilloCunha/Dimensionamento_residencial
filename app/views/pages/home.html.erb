@@ -1,4 +1,3 @@
-<%# app/views/pages/home.html.erb %>
 <style>
 .circuit-title-1 { color: #2196F3; }  /* Azul */
 .circuit-title-2 { color: #4CAF50; }  /* Verde */
@@ -11,67 +10,104 @@
 .circuit-title-9 { color: #009688; }  /* Verde Água */
 .circuit-title-10 { color: #673AB7; } /* Roxo Escuro */
 /* Se precisar de mais cores, o padrão recomeça do 1 */
+
+/* Status colors */
+.status-ok { color: #0D47A1; font-weight: bold; } /* Azul escuro */
+.status-fail { color: #B71C1C; font-weight: bold; } /* Vermelho escuro */
+
+/* Estilos para impressão */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-break-after {
+    page-break-after: always;
+  }
+  .card {
+    border: 1px solid #ddd !important;
+    margin-bottom: 20px !important;
+  }
+  body {
+    padding: 20px !important;
+  }
+}
 </style>
 
 <div class="container mt-5">
-  <h2>Dimensionamento de Circuitos Elétricos</h2>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Dimensionamento de Circuitos Elétricos</h2>
+    <% if @results.present? %>
+      <button onclick="window.print()" class="btn btn-info no-print">
+        <i class="fas fa-print"></i> Imprimir PDF
+      </button>
+    <% end %>
+  </div>
 
-  <%= form_tag(root_path, method: :get, class: "mb-4") do %>
-    <div id="circuits-container">
-      <!-- Primeiro circuito -->
-      <div class="circuit-form mb-4" data-circuit="1">
-        <h4 class="mb-3 circuit-title-1">Circuito 1</h4>
-        <div class="row">
-          <div class="col-md-3 mb-3">
-            <%= label_tag "voltage_1", "Tensão (V)" %>
-            <%= select_tag "circuits[1][voltage]",
-                options_for_select([["127 V", "127"], ["220 V", "220"]], 
-                params.dig(:circuits, "1", :voltage)),
-                class: "form-control" %>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <%= label_tag "power_1", "Potência (W)" %>
-            <%= number_field_tag "circuits[1][power]", 
-                params.dig(:circuits, "1", :power), 
-                class: "form-control" %>
-          </div>
-          
-          <div class="col-md-2 mb-3">
-            <%= label_tag "distance_1", "Distância (m)" %>
-            <%= number_field_tag "circuits[1][distance]", 
-                params.dig(:circuits, "1", :distance), 
-                class: "form-control" %>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <%= label_tag "circuit_type_1", "Tipo de Circuito" %>
-            <%= select_tag "circuits[1][circuit_type]", 
-                options_for_select([["Tomada", "Tomada"], ["Iluminação", "Iluminação"]], 
-                params.dig(:circuits, "1", :circuit_type)), 
-                class: "form-control" %>
+  <div class="no-print">
+    <%= form_tag(root_path, method: :get, class: "mb-4") do %>
+      <div id="circuits-container">
+        <!-- Primeiro circuito -->
+        <div class="circuit-form mb-4" data-circuit="1">
+          <h4 class="mb-3 circuit-title-1">Circuito 1</h4>
+          <div class="row">
+            <div class="col-md-3 mb-3">
+              <%= label_tag "voltage_1", "Tensão (V)" %>
+              <%= select_tag "circuits[1][voltage]",
+                  options_for_select([["127 V", "127"], ["220 V", "220"]], 
+                  params.dig(:circuits, "1", :voltage)),
+                  class: "form-control" %>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+              <%= label_tag "power_1", "Potência (W)" %>
+              <%= number_field_tag "circuits[1][power]", 
+                  params.dig(:circuits, "1", :power), 
+                  class: "form-control" %>
+            </div>
+            
+            <div class="col-md-2 mb-3">
+              <%= label_tag "distance_1", "Distância (m)" %>
+              <%= number_field_tag "circuits[1][distance]", 
+                  params.dig(:circuits, "1", :distance), 
+                  class: "form-control" %>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+              <%= label_tag "circuit_type_1", "Tipo de Circuito" %>
+              <%= select_tag "circuits[1][circuit_type]", 
+                  options_for_select([["Tomada", "Tomada"], ["Iluminação", "Iluminação"]], 
+                  params.dig(:circuits, "1", :circuit_type)), 
+                  class: "form-control" %>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="mb-3">
-      <button type="button" class="btn btn-secondary" onclick="addCircuit()">
-        Adicionar Circuito
-      </button>
-    </div>
+      <div class="mb-3">
+        <button type="button" class="btn btn-secondary" onclick="addCircuit()">
+          Adicionar Circuito
+        </button>
+      </div>
 
-    <div class="text-center mb-4">
-      <%= submit_tag "Calcular Todos", class: "btn btn-primary" %>
-    </div>
-  <% end %>
+      <div class="text-center mb-4">
+        <%= submit_tag "Calcular Todos", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
 
   <% if @results.present? %>
     <div class="results mt-4">
-      <h3>Resultados dos Dimensionamentos</h3>
+      <!-- Cabeçalho apenas para impressão -->
+      <div class="d-none d-print-block mb-4">
+        <h1 class="text-center">Relatório de Dimensionamento Elétrico</h1>
+        <p class="text-center">Data: <%= Time.current.strftime("%d/%m/%Y") %></p>
+        <hr>
+      </div>
+
+      <h3 class="no-print">Resultados dos Dimensionamentos</h3>
       
       <% @results.each do |circuit_number, result| %>
-        <div class="card mb-3">
+        <div class="card mb-4">
           <div class="card-header">
             <h5 class="mb-0 circuit-title-<%= circuit_number %>">Circuito <%= circuit_number %></h5>
           </div>
@@ -90,7 +126,7 @@
                 <h5>Queda de Tensão</h5>
                 <p><strong>Valor:</strong> <%= number_with_precision(result[:voltage_drop], precision: 2) %>%</p>
                 <p><strong>Status:</strong> 
-                  <span class="<%= result[:compliance] == 'Atende NBR 5410' ? 'text-success' : 'text-danger' %>">
+                  <span class="<%= result[:compliance] == 'Atende NBR 5410' ? 'status-ok' : 'status-fail' %>">
                     <%= result[:compliance] %>
                   </span>
                 </p>
@@ -99,6 +135,12 @@
           </div>
         </div>
       <% end %>
+
+      <!-- Rodapé apenas para impressão -->
+      <div class="d-none d-print-block mt-4">
+        <hr>
+        <p class="text-center">Este relatório foi gerado automaticamente pelo sistema de Dimensionamento Elétrico.</p>
+      </div>
     </div>
   <% end %>
 </div>
@@ -108,7 +150,7 @@ let circuitCount = 1;
 
 function addCircuit() {
   circuitCount++;
-  const colorClass = `circuit-title-${((circuitCount - 1) % 10) + 1}`; // Ciclo de 10 cores
+  const colorClass = `circuit-title-${((circuitCount - 1) % 10) + 1}`;
   
   const template = `
     <div class="circuit-form mb-4" data-circuit="${circuitCount}">
