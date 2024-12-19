@@ -1,5 +1,9 @@
 # README
 
+A idéia desse aplicativo é ajudar ao instalador de elétrica residencial para dimensionar fios, disjuntores de forma correta
+sem que o consumidor final pague caro por algo subdimensionado
+
+
 This README would normally document whatever steps are necessary to get the
 application up and running.
 
