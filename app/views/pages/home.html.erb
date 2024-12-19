@@ -1,0 +1,20 @@
+<h1>Dimensionamento Elétrico</h1>
+<%= form_with url: root_path, method: :get do |f| %>
+  <div>
+    <%= f.label :voltage, "Tensão (V)" %>
+    <%= f.number_field :voltage %>
+  </div>
+  <div>
+    <%= f.label :power, "Potência (W)" %>
+    <%= f.number_field :power %>
+  </div>
+  <div>
+    <%= f.label :distance, "Distância (m)" %>
+    <%= f.number_field :distance %>
+  </div>
+  <div>
+    <%= f.label :circuit_type, "Tipo de Circuito" %>
+    <%= f.select :circuit_type, ["Iluminação", "Tomada", "Chuveiro", "Ar-Condicionado"] %>
+  </div>
+  <%= f.submit "Calcular" %>
+<% end %>
