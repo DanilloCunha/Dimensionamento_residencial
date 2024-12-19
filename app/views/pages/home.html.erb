@@ -1,20 +1,163 @@
-<h1>Dimensionamento Elétrico</h1>
-<%= form_with url: root_path, method: :get do |f| %>
-  <div>
-    <%= f.label :voltage, "Tensão (V)" %>
-    <%= f.number_field :voltage %>
-  </div>
-  <div>
-    <%= f.label :power, "Potência (W)" %>
-    <%= f.number_field :power %>
-  </div>
-  <div>
-    <%= f.label :distance, "Distância (m)" %>
-    <%= f.number_field :distance %>
-  </div>
-  <div>
-    <%= f.label :circuit_type, "Tipo de Circuito" %>
-    <%= f.select :circuit_type, ["Iluminação", "Tomada", "Chuveiro", "Ar-Condicionado"] %>
-  </div>
-  <%= f.submit "Calcular" %>
-<% end %>
+<%# app/views/pages/home.html.erb %>
+<style>
+.circuit-title-1 { color: #2196F3; }  /* Azul */
+.circuit-title-2 { color: #4CAF50; }  /* Verde */
+.circuit-title-3 { color: #F44336; }  /* Vermelho */
+.circuit-title-4 { color: #9C27B0; }  /* Roxo */
+.circuit-title-5 { color: #FF9800; }  /* Laranja */
+.circuit-title-6 { color: #795548; }  /* Marrom */
+.circuit-title-7 { color: #607D8B; }  /* Azul Acinzentado */
+.circuit-title-8 { color: #E91E63; }  /* Rosa */
+.circuit-title-9 { color: #009688; }  /* Verde Água */
+.circuit-title-10 { color: #673AB7; } /* Roxo Escuro */
+/* Se precisar de mais cores, o padrão recomeça do 1 */
+</style>
+
+<div class="container mt-5">
+  <h2>Dimensionamento de Circuitos Elétricos</h2>
+
+  <%= form_tag(root_path, method: :get, class: "mb-4") do %>
+    <div id="circuits-container">
+      <!-- Primeiro circuito -->
+      <div class="circuit-form mb-4" data-circuit="1">
+        <h4 class="mb-3 circuit-title-1">Circuito 1</h4>
+        <div class="row">
+          <div class="col-md-3 mb-3">
+            <%= label_tag "voltage_1", "Tensão (V)" %>
+            <%= select_tag "circuits[1][voltage]",
+                options_for_select([["127 V", "127"], ["220 V", "220"]], 
+                params.dig(:circuits, "1", :voltage)),
+                class: "form-control" %>
+          </div>
+          
+          <div class="col-md-3 mb-3">
+            <%= label_tag "power_1", "Potência (W)" %>
+            <%= number_field_tag "circuits[1][power]", 
+                params.dig(:circuits, "1", :power), 
+                class: "form-control" %>
+          </div>
+          
+          <div class="col-md-2 mb-3">
+            <%= label_tag "distance_1", "Distância (m)" %>
+            <%= number_field_tag "circuits[1][distance]", 
+                params.dig(:circuits, "1", :distance), 
+                class: "form-control" %>
+          </div>
+          
+          <div class="col-md-3 mb-3">
+            <%= label_tag "circuit_type_1", "Tipo de Circuito" %>
+            <%= select_tag "circuits[1][circuit_type]", 
+                options_for_select([["Tomada", "Tomada"], ["Iluminação", "Iluminação"]], 
+                params.dig(:circuits, "1", :circuit_type)), 
+                class: "form-control" %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <button type="button" class="btn btn-secondary" onclick="addCircuit()">
+        Adicionar Circuito
+      </button>
+    </div>
+
+    <div class="text-center mb-4">
+      <%= submit_tag "Calcular Todos", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+
+  <% if @results.present? %>
+    <div class="results mt-4">
+      <h3>Resultados dos Dimensionamentos</h3>
+      
+      <% @results.each do |circuit_number, result| %>
+        <div class="card mb-3">
+          <div class="card-header">
+            <h5 class="mb-0 circuit-title-<%= circuit_number %>">Circuito <%= circuit_number %></h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <h5>Dados do Circuito</h5>
+                <p><strong>Tensão:</strong> <%= result[:voltage] %> V</p>
+                <p><strong>Corrente:</strong> <%= number_with_precision(result[:current], precision: 2) %> A</p>
+                <p><strong>Seção do Condutor:</strong> <%= result[:recommendation] %></p>
+                <p><strong>Corrente Máxima Suportada:</strong> <%= result[:max_current] %> A</p>
+                <p><strong>Disjuntor Recomendado:</strong> <%= result[:circuit_breaker] %> A</p>
+              </div>
+              
+              <div class="col-md-6">
+                <h5>Queda de Tensão</h5>
+                <p><strong>Valor:</strong> <%= number_with_precision(result[:voltage_drop], precision: 2) %>%</p>
+                <p><strong>Status:</strong> 
+                  <span class="<%= result[:compliance] == 'Atende NBR 5410' ? 'text-success' : 'text-danger' %>">
+                    <%= result[:compliance] %>
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<script>
+let circuitCount = 1;
+
+function addCircuit() {
+  circuitCount++;
+  const colorClass = `circuit-title-${((circuitCount - 1) % 10) + 1}`; // Ciclo de 10 cores
+  
+  const template = `
+    <div class="circuit-form mb-4" data-circuit="${circuitCount}">
+      <h4 class="mb-3 ${colorClass}">Circuito ${circuitCount}</h4>
+      <div class="row">
+        <div class="col-md-3 mb-3">
+          <label>Tensão (V)</label>
+          <select name="circuits[${circuitCount}][voltage]" class="form-control">
+            <option value="127">127 V</option>
+            <option value="220">220 V</option>
+          </select>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+          <label>Potência (W)</label>
+          <input type="number" name="circuits[${circuitCount}][power]" class="form-control">
+        </div>
+        
+        <div class="col-md-2 mb-3">
+          <label>Distância (m)</label>
+          <input type="number" name="circuits[${circuitCount}][distance]" class="form-control">
+        </div>
+        
+        <div class="col-md-3 mb-3">
+          <label>Tipo de Circuito</label>
+          <select name="circuits[${circuitCount}][circuit_type]" class="form-control">
+            <option value="Tomada">Tomada</option>
+            <option value="Iluminação">Iluminação</option>
+          </select>
+        </div>
+        
+        <div class="col-md-1 mb-3 d-flex align-items-end">
+          <button type="button" class="btn btn-danger" onclick="removeCircuit(${circuitCount})">
+            X
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('circuits-container').insertAdjacentHTML('beforeend', template);
+}
+
+function removeCircuit(number) {
+  const circuit = document.querySelector(`[data-circuit="${number}"]`);
+  if (circuit) {
+    circuit.remove();
+  }
+}
+</script>
+TENHA UM BOM SERVIÇO
+
