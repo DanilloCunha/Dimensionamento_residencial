@@ -1,19 +1,37 @@
+<%# app/views/pages/home.html.erb %>
 <style>
-.circuit-title-1 { color: #2196F3; }  /* Azul */
-.circuit-title-2 { color: #4CAF50; }  /* Verde */
-.circuit-title-3 { color: #F44336; }  /* Vermelho */
-.circuit-title-4 { color: #9C27B0; }  /* Roxo */
-.circuit-title-5 { color: #FF9800; }  /* Laranja */
-.circuit-title-6 { color: #795548; }  /* Marrom */
-.circuit-title-7 { color: #607D8B; }  /* Azul Acinzentado */
-.circuit-title-8 { color: #E91E63; }  /* Rosa */
-.circuit-title-9 { color: #009688; }  /* Verde Água */
-.circuit-title-10 { color: #673AB7; } /* Roxo Escuro */
-/* Se precisar de mais cores, o padrão recomeça do 1 */
+/* Cores dos circuitos */
+.circuit-title-1 { color: #2196F3; }
+.circuit-title-2 { color: #4CAF50; }
+.circuit-title-3 { color: #F44336; }
+.circuit-title-4 { color: #9C27B0; }
+.circuit-title-5 { color: #FF9800; }
+.circuit-title-6 { color: #795548; }
+.circuit-title-7 { color: #607D8B; }
+.circuit-title-8 { color: #E91E63; }
+.circuit-title-9 { color: #009688; }
+.circuit-title-10 { color: #673AB7; }
 
 /* Status colors */
 .status-ok { color: #0D47A1; font-weight: bold; } /* Azul escuro */
 .status-fail { color: #B71C1C; font-weight: bold; } /* Vermelho escuro */
+
+/* Card header with delete button */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.delete-result-btn {
+  color: #dc3545;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  padding: 0 8px;
+  display: none;
+}
 
 /* Estilos para impressão */
 @media print {
@@ -29,6 +47,15 @@
   }
   body {
     padding: 20px !important;
+  }
+  .delete-result-btn {
+    display: none !important;
+  }
+}
+
+@media screen {
+  .delete-result-btn {
+    display: inline-block;
   }
 }
 </style>
@@ -96,7 +123,7 @@
   </div>
 
   <% if @results.present? %>
-    <div class="results mt-4">
+    <div class="results mt-4" id="results-container">
       <!-- Cabeçalho apenas para impressão -->
       <div class="d-none d-print-block mb-4">
         <h1 class="text-center">Relatório de Dimensionamento Elétrico</h1>
@@ -107,9 +134,16 @@
       <h3 class="no-print">Resultados dos Dimensionamentos</h3>
       
       <% @results.each do |circuit_number, result| %>
-        <div class="card mb-4">
+        <div class="card mb-4" id="result-card-<%= circuit_number %>">
           <div class="card-header">
             <h5 class="mb-0 circuit-title-<%= circuit_number %>">Circuito <%= circuit_number %></h5>
+            <button 
+              class="delete-result-btn no-print" 
+              onclick="deleteResult('<%= circuit_number %>')"
+              title="Excluir este circuito"
+            >
+              ×
+            </button>
           </div>
           <div class="card-body">
             <div class="row">
@@ -198,6 +232,29 @@ function removeCircuit(number) {
   const circuit = document.querySelector(`[data-circuit="${number}"]`);
   if (circuit) {
     circuit.remove();
+  }
+}
+
+function deleteResult(circuitNumber) {
+  if (confirm(`Tem certeza que deseja excluir o Circuito ${circuitNumber}?`)) {
+    const card = document.getElementById(`result-card-${circuitNumber}`);
+    if (card) {
+      card.remove();
+      
+      // Verifica se ainda existem resultados
+      const resultsContainer = document.getElementById('results-container');
+      const remainingCards = resultsContainer.querySelectorAll('.card');
+      if (remainingCards.length === 0) {
+        // Se não houver mais cards, remove todo o container de resultados
+        resultsContainer.remove();
+        
+        // Remove também o botão de impressão se não houver mais resultados
+        const printButton = document.querySelector('.btn-info');
+        if (printButton) {
+          printButton.remove();
+        }
+      }
+    }
   }
 }
 </script>
